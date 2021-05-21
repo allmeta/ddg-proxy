@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Search</title>
+<style>
+  html,body{
+    margin:0;
+    background:#1d2021;
+    color:#ebdbb2;
+  }
+  body{
+    width:50em;
+  }
+  form{
+    margin:1em;
+  }
+  input{
+    height:2em;
+    background:#444;
+    color:white;
+    border:none;
+    font-size:16px;
+    padding:0.2em;
+    padding-left:1em;
+    width:46.8em;
+    border-radius:5px;
+  }
+  input:focus{
+    outline:none;
+  }
+  .result{
+    display:flex;
+    flex-direction:column;
+    margin:1em;
+    padding:0.3em;
+    border-left:0.5em solid #444;
+    border-radius:5px;
+    font-family:'Fira Code';
+  }
+  .active{
+    border-left-color:orange;
+    background:#444;
+  }
+  .title{
+    font-weight:bold;
+  }
+  .desc{
+    font-size:14px;
+  }
+  a{
+    text-decoration:none; 
+    color:#b8bb26;
+  }
+  .result__type{
+    color:#b16286;
+  }
+
+</style>
+</head>
+<body>
+  <form action="/" method="get"><input id="search" name="q" value="{{{query}}}"></form>
+  {{#each results}}
+  <div class="result">
+    <span class="title">{{{title}}}</span>
+    <a href="https://{{link}}">{{link}}</a>
+    <span class="desc">{{desc}}</span>
+  </div>
+  {{/each}}
+</body>
+<script>
+let active=0;
+let ws;
+let wslen;
+function updateActive(a){
+  if(a<0 || a>=wslen) return 
+  let c=ws[active].className.split(' ')[0]
+  ws[active].className=c
+
+  active=a
+  ws[a].className+=' active'
+  let l=ws[a].querySelector('a')
+  //l.focus()
+  l.scrollIntoView({block:'center'})
+}
+function followLink(newtab){
+  let a=document.querySelectorAll('.result a')[active].href
+  newtab ? window.open(a) : window.location=a
+}
+function keyHandler(e){
+  switch (e.key){
+    case 'j':
+    case 'ArrowDown': updateActive(active+1);break;
+    case 'k':
+    case 'ArrowUp': updateActive(active-1);break;
+    case 'ArrowRight':
+    case 'l':
+    case 'Enter': followLink(e.ctrlKey);break;
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('search').addEventListener('keydown',e=>{
+    e.stopPropagation()
+  })
+  document.getElementById('search').addEventListener('input',e=>{
+    e.stopPropagation()
+  })
+  window.addEventListener('keydown',keyHandler)
+  ws=document.querySelectorAll('.result'); 
+  wslen=ws.length;
+  updateActive(0); 
+})
+</script>
+</html>
