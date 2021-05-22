@@ -29,7 +29,8 @@ jobs:
         rust: [nightly]
 
     steps:
-    - name: Cache
+    - uses: actions/checkout@master
+    - name: Cache cargo
       uses: actions/cache@v2
       with:
         path: |
@@ -45,7 +46,6 @@ jobs:
       with:
         rust-version: ${{ matrix.rust }}
         
-    - uses: actions/checkout@master
     - name: Build
       run: cargo build --release    
       
@@ -60,8 +60,8 @@ jobs:
       run: |
         tar caf ddg-proxy.tar.gz templates target/release/ddg-proxy
 
-    - uses: "marvinpinto/action-automatic-releases@latest"
     - name: Publish
+      uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
