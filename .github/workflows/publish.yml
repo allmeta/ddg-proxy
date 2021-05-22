@@ -1,0 +1,74 @@
+name: Publish
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'src/**'
+    - 'templates/**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Publish binaries for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          file: target/release/ddg-proxy
+          args: --best --lzma
+          strip: true
+#         - os: windows-latest
+#           file: target/release/ddg-proxy.exe
+#           args: -9
+#           strip: false
+        - os: macos-latest
+          file: target/release/ddg-proxy
+          args: --best
+          strip: true
+        rust: [nightly]
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Cache cargo
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Setup rust toolchain
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+        
+    - name: Build
+      run: cargo build --release    
+      
+    - name: Compress binaries
+      uses: svenstaro/upx-action@v2
+      with:
+        file: ${{ matrix.file }}
+        args: ${{ matrix.args }}
+        strip: ${{ matrix.strip }}
+        
+    - name: Archive
+      run: |
+        tar caf ddg-proxy.tar.gz templates target/release/ddg-proxy
+
+    - name: Publish
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        automatic_release_tag: latest
+        title: Latest Build
+        files: | 
+          ddg-proxy.tar.gz
