@@ -1,8 +1,11 @@
 name: Publish
 
 on:
-  pull_request:
+  push:
     branches: [ main ]
+    paths:
+    - 'src/**'
+    - 'templates/**'
 
 env:
   CARGO_TERM_COLOR: always
