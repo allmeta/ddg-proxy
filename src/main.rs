@@ -2,9 +2,12 @@
 #![feature(str_split_as_str)]
 
 #[macro_use] extern crate rocket;
+#[macro_use] extern crate lazy_static;
 
+use std::collections::HashMap;
 use serde::Serialize;
 use urlencoding::decode;
+use url::Url;
 
 use rocket::http::RawStr;
 use rocket::http::hyper::header::Location;
@@ -33,21 +36,34 @@ struct ContextResult {
     link: String,
     desc: String
 }
+lazy_static! {
+    static ref BANGS: HashMap<&'static str,&'static str> = [
+        ("tr", "https://translate.google.com/#auto/en/{}"),
+        ("r", "https://www.reddit.com/search?q={}"),
+        ("rio","https://raider.io/search?type=character&name[0][contains]={}"),
+        ("yt" ,"https://www.youtube.com/results?search_query={}"),
+        ("gh" ,"https://github.com/search?q={}"),
+        ("tw" ,"https://twitter.com/search?q={}"),
+        ("imdb","https://www.imdb.com/find?s=all&q={}")
+    ].iter().cloned().collect();
+
+}
+static DDG_SEARCH: &'static str="http://duckduckgo.com/?q=";
 
 
 fn get_bang(bang:&str, r:&str) -> String {
-    let b: &str="http://duckduckgo.com/?q=!";
-    let default: &str = &[b,bang,&" {}"].concat();
-    match bang {
-      "tr"  => "https://translate.google.com/#auto/en/{}",
-      "r"   => "https://www.reddit.com/search?q={}",
-      "rio" => "https://raider.io/search?type=character&name[0][contains]={}",
-      "yt"  => "https://www.youtube.com/results?search_query={}",
-      "gh"  => "https://github.com/search?q={}",
-      "tw"  => "https://twitter.com/search?q={}",
-      "imdb"=> "https://www.imdb.com/find?s=all&q={}",
-        _   => default
-    }.replace("{}",r)
+    let url: String;
+    if BANGS.contains_key(bang) {
+        url=BANGS.get(bang).unwrap().replace("{}",r);
+    }else{
+       return format!("{}!{} {}",DDG_SEARCH,bang,r)
+    }
+    if r=="" {
+        let url=Url::parse(&url).unwrap();
+        format!("{}://{}",url.scheme(), url.host_str().unwrap())
+    }else{
+        url
+    }
 }
 fn handle_bang(q: String) -> ExampleResponse {
     let _q=&q[1..];
