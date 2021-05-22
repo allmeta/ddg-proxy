@@ -1,5 +1,5 @@
 [package]
-name = "rust-startpage"
+name = "ddg-proxy"
 version = "0.1.0"
 authors = ["allmeta <thomasdasd@gmail.com>"]
 edition = "2018"
