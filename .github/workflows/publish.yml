@@ -16,6 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         include:
         - os: ubuntu-latest
           file: target/release/ddg-proxy
@@ -61,7 +62,8 @@ jobs:
         
     - name: Archive
       run: |
-        tar caf ddg-proxy.tar.gz templates target/release/ddg-proxy
+        mv target/release/ddg-proxy .
+        tar caf ddg-proxy-${{matrix.os}}.tar.gz templates ddg-proxy
 
     - name: Publish
       uses: "marvinpinto/action-automatic-releases@latest"
