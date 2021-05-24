@@ -73,4 +73,4 @@ jobs:
         automatic_release_tag: latest
         title: Latest Build
         files: | 
-          ddg-proxy.tar.gz
+          ddg-proxy-${{matrix.os}}.tar.gz
