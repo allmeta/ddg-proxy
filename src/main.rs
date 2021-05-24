@@ -11,6 +11,7 @@ use url::Url;
 
 use rocket::http::RawStr;
 use rocket::http::hyper::header::Location;
+
 use rocket_contrib::templates::{Template};
 
 use scraper::{Html,Selector};
