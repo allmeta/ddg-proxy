@@ -1,19 +1,38 @@
 name: Publish
 
 on:
+  # Trigger the workflow on the new 'v*' tag created
   push:
-    branches: [ main ]
-    paths:
-    - 'src/**'
-    - 'templates/**'
+    tags:
+      - "v*"
 
 env:
   CARGO_TERM_COLOR: always
 
+
 jobs:
-  release:
-    name: Publish binaries for ${{ matrix.os }}
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    # Note this. We are going to use that in further jobs.
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+          
+  build_and_publish:
+    name: Build and publish binaries for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: create_release # need upload_url
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -31,7 +50,6 @@ jobs:
           args: --best
           strip: true
         rust: [nightly]
-
     steps:
     - uses: actions/checkout@master
     - name: Cache cargo
@@ -64,13 +82,12 @@ jobs:
       run: |
         mv target/release/ddg-proxy .
         tar caf ddg-proxy-${{matrix.os}}.tar.gz templates ddg-proxy
-
-    - name: Publish
-      uses: "marvinpinto/action-automatic-releases@latest"
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: false
-        automatic_release_tag: latest
-        title: Latest Build
-        files: | 
-          ddg-proxy-${{matrix.os}}.tar.gz
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_name: ddg-proxy-${{ matrix.config.os }}.tar.gz
+        asset_path: ddg-proxy-${{ matrix.config.os }}.tar.gz
+        asset_content_type: application/octet-stream
