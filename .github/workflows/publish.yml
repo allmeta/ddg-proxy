@@ -35,21 +35,22 @@ jobs:
     needs: create_release # need upload_url
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
         - os: ubuntu-latest
-          file: target/release/ddg-proxy
+          file: ddg-proxy
           args: --best --lzma
           strip: true
-#         - os: windows-latest
-#           file: target/release/ddg-proxy.exe
-#           args: -9
-#           strip: false
+        - os: windows-latest
+          file: ddg-proxy.exe
+          args: -9
+          strip: false
         - os: macos-latest
-          file: target/release/ddg-proxy
+          file: ddg-proxy
           args: --best
           strip: true
         rust: [nightly]
+        binary_path: [target/release]
     steps:
     - uses: actions/checkout@master
     - name: Cache cargo
@@ -69,19 +70,19 @@ jobs:
         rust-version: ${{ matrix.rust }}
         
     - name: Build
-      run: cargo build --release    
+      run: cargo build --release
       
     - name: Compress binaries
       uses: svenstaro/upx-action@v2
       with:
-        file: ${{ matrix.file }}
+        file: ${{ matrix.binary_path }}/${{ matrix.file }}
         args: ${{ matrix.args }}
         strip: ${{ matrix.strip }}
         
     - name: Archive
       run: |
-        mv target/release/ddg-proxy .
-        tar caf ddg-proxy-${{matrix.os}}.tar.gz templates ddg-proxy
+        mv ${{ matrix.binary_path }}/${{ matrix.file }} .
+        tar caf ddg-proxy-${{matrix.os}}.tar.gz templates ${{ matrix.file }}
     - name: Upload release assets
       uses: actions/upload-release-asset@v1
       env:
