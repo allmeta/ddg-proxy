@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Search</title>
+<title>Search | {{ query }}</title>
 <style>
+  :root{
+    --bg: #1a1b26;
+    --fg: #a9b1d6;
+    --bg-alt: #32344a;
+    --accent: #f7768e;
+    --accent2: #9ece6a;
+    --accent3: #ad8ee6;
+  }
   html,body{
     margin:0;
-    background:#1d2021;
-    color:#ebdbb2;
+    background:var(--bg);
+    color:var(--fg);
+    overflow-y:hidden;
   }
   body{
     width:50em;
@@ -16,8 +25,8 @@
   }
   input{
     height:2em;
-    background:#444;
-    color:white;
+    background:var(--bg-alt);
+    color:var(--fg);
     border:none;
     font-size:16px;
     padding:0.2em;
@@ -33,13 +42,13 @@
     flex-direction:column;
     margin:1em;
     padding:0.3em;
-    border-left:0.5em solid #444;
+    border-left:0.5em solid var(--bg-alt);
     border-radius:5px;
     font-family:'Fira Code';
   }
   .active{
-    border-left-color:orange;
-    background:#444;
+    border-left-color:var(--accent);
+    background:var(--bg-alt);
   }
   .title{
     font-weight:bold;
@@ -49,10 +58,10 @@
   }
   a{
     text-decoration:none; 
-    color:#b8bb26;
+    color:var(--accent2);
   }
   .result__type{
-    color:#b16286;
+    color:var(--accent3);
   }
 
 </style>
@@ -84,7 +93,7 @@ function updateActive(a){
 }
 function followLink(newtab){
   let a=document.querySelectorAll('.result a')[active].href
-  newtab ? window.open(a) : window.location=a
+  newtab ? window.open(a,'_blank') : window.location=a
 }
 function keyHandler(e){
   switch (e.key){
