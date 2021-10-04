@@ -44,6 +44,7 @@ lazy_static! {
         ("yt" ,"https://www.youtube.com/results?search_query={}"),
         ("gh" ,"https://github.com/search?q={}"),
         ("tw" ,"https://twitter.com/search?q={}"),
+        ("m" ,"https://www.google.no/maps?q={}"),
         ("imdb","https://www.imdb.com/find?s=all&q={}")
     ].iter().cloned().collect();
 
@@ -83,14 +84,28 @@ fn handle_query(q: String) -> ExampleResponse {
     let link = Selector::parse(".result__url").unwrap();
     let desc = Selector::parse(".result__snippet").unwrap();
 
-    let results=fragment.select(&web_result).take(10)
-        .map(|e| 
-            ContextResult{
-                title: e.select(&title).next().unwrap().inner_html(),
-                link: e.select(&link).next().unwrap().inner_html().trim().to_string(),
-                desc:e.select(&desc).next().unwrap().text().collect::<String>(),
+    let results=fragment.select(&web_result).take(20)
+        .filter_map(|e| {
+            let link = e.select(&link).next();
+            let result_link;
+            if link == None{
+                return None;
+            }else{
+                result_link=link.unwrap().inner_html().trim().to_string();
             }
-        )
+            let desc = e.select(&desc).next();
+            let result_desc;
+            if desc == None{
+                return None;
+            }else{
+                result_desc=desc.unwrap().text().collect::<String>()
+            }
+            return Some(ContextResult{
+                title: e.select(&title).next().unwrap().inner_html(),
+                link: result_link,
+                desc: result_desc
+            })
+        })
         .collect::<Vec<_>>();
     ExampleResponse::Template(Template::render("index",&TemplateContext{
         query: q.to_string(),
