@@ -269,6 +269,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ddg-proxy"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "rocket",
+ "rocket_contrib",
+ "scraper",
+ "serde",
+ "ureq",
+ "url 2.2.2",
+ "urlencoding",
+]
+
+[[package]]
 name = "derive_more"
 version = "0.99.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1277,20 +1291,6 @@ dependencies = [
  "state",
  "time",
  "unicode-xid 0.1.0",
-]
-
-[[package]]
-name = "rust-startpage"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "rocket",
- "rocket_contrib",
- "scraper",
- "serde",
- "ureq",
- "url 2.2.2",
- "urlencoding",
 ]
 
 [[package]]
