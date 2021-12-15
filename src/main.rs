@@ -5,6 +5,8 @@
 #[macro_use] extern crate lazy_static;
 
 use std::collections::HashMap;
+use std::path::{PathBuf, Path};
+
 use serde::Serialize;
 use urlencoding::decode;
 use url::Url;
@@ -12,6 +14,7 @@ use url::Url;
 use rocket::http::RawStr;
 use rocket::http::hyper::header::Location;
 use rocket_contrib::templates::{Template};
+use rocket::fs::{NamedFile, relative};
 
 use scraper::{Html,Selector};
 
@@ -124,6 +127,12 @@ fn query(q: &RawStr) -> ExampleResponse {
         handle_query(q)
     }
 }
+
+#[get("/favicon.ico")]
+fn favicon() -> Option<NamedFile> {
+    NamedFile::open("favicon.ico").await.ok()
+}
+
 #[catch(404)]
 fn not_found() -> String {
     String::from("Kys")
