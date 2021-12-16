@@ -1,32 +1,20 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 #![feature(str_split_as_str)]
 
-#[macro_use] extern crate rocket;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate rocket;
 
 use std::collections::HashMap;
-use std::path::{PathBuf, Path};
+use either::{Either,Left,Right};
 
 use serde::Serialize;
 use urlencoding::decode;
 use url::Url;
 
-use rocket::http::RawStr;
-use rocket::http::hyper::header::Location;
-use rocket_contrib::templates::{Template};
-use rocket::fs::{NamedFile, relative};
+use rocket_dyn_templates::Template;
+use rocket::response::Redirect;
 
 use scraper::{Html,Selector};
-
-#[derive(Responder)]
-#[response(status=303)]
-struct RawRedirect((), Location);
-
-#[derive(Responder)]
-enum ExampleResponse {
-    Template(Template),
-    Redirect(RawRedirect),
-}
 
 #[derive(Debug, Serialize)]
 struct TemplateContext {
@@ -69,15 +57,15 @@ fn get_bang(bang:&str, r:&str) -> String {
         url
     }
 }
-fn handle_bang(q: String) -> ExampleResponse {
+fn handle_bang(q: String) -> Redirect {
     let _q=&q[1..];
     let s=&mut _q.split(" ");
     let bang=s.next().unwrap();
     let st = s.as_str();
     let b=get_bang(bang,st);
-    ExampleResponse::Redirect(RawRedirect((),Location(b)))
+    Redirect::to(b)
 }
-fn handle_query(q: String) -> ExampleResponse {
+fn handle_query(q: String) -> Template {
     let html: String = ureq::get(&format!("https://html.duckduckgo.com/html?q={}",q))
         .call().unwrap()
         .into_string().unwrap();
@@ -110,28 +98,24 @@ fn handle_query(q: String) -> ExampleResponse {
             })
         })
         .collect::<Vec<_>>();
-    ExampleResponse::Template(Template::render("index",&TemplateContext{
+    Template::render("index",&TemplateContext{
         query: q.to_string(),
         results: results
-    }))
+    })
 }
 
 #[get("/?<q>")]
-fn query(q: &RawStr) -> ExampleResponse {
+fn query(q: String) -> Either<Redirect,Template>{
     let q=q.replace("+"," ");
     let q=decode(&q).unwrap_or(q.to_string());
     println!("{}", q);
     if q.starts_with("!") {
-        handle_bang(q)
+        Left(handle_bang(q))
     }else{
-        handle_query(q)
+        Right(handle_query(q))
     }
 }
 
-#[get("/favicon.ico")]
-fn favicon() -> Option<NamedFile> {
-    NamedFile::open("favicon.ico").await.ok()
-}
 
 #[catch(404)]
 fn not_found() -> String {
@@ -139,7 +123,7 @@ fn not_found() -> String {
 }
 
 fn main() {
-    rocket::ignite()
+    rocket::build()
         .mount("/", routes![query])
         .attach(Template::fairing())
         .launch();
