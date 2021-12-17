@@ -1,5 +1,6 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 #![feature(str_split_as_str)]
+#![feature(option_result_contains)]
 
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate rocket;
@@ -11,20 +12,22 @@ use serde::Serialize;
 use urlencoding::decode;
 use url::Url;
 
-use rocket_dyn_templates::Template;
+use rocket_dyn_templates::{Template};
 use rocket::response::Redirect;
+use rocket::fs::NamedFile;
 
 use scraper::{Html,Selector};
 
 #[derive(Debug, Serialize)]
 struct TemplateContext {
     query: String,
+    backend: String,
     results: Vec<ContextResult>
 }
 #[derive(Debug, Serialize)]
 struct ContextResult {
     title: String,
-    link: String,
+    link: String, 
     desc: String
 }
 lazy_static! {
@@ -36,11 +39,18 @@ lazy_static! {
         ("gh" ,"https://github.com/search?q={}"),
         ("tw" ,"https://twitter.com/search?q={}"),
         ("m" ,"https://www.google.no/maps?q={}"),
-        ("imdb","https://www.imdb.com/find?s=all&q={}")
+        ("imdb","https://www.imdb.com/find?s=all&q={}"),
+        ("ig","https://www.instagram.com/{}")
     ].iter().cloned().collect();
 
+    static ref SELECTORS: HashMap<&'static str,[&'static str; 4]> = [
+        ("ddg", [".web-result",".result__title a",".result__url",".result__snippet"]),
+        ("google", ["div.g", ".LC20lb.MBeuO.DKV0Md", ".yuRUbf a", ".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf span"])
+    ].iter().cloned().collect();
 }
-static DDG_SEARCH: &'static str="http://duckduckgo.com/?q=";
+static DDG_URL: &'static str="http://duckduckgo.com/?q=";
+static DDG_HTML_URL: &'static str="https://html.duckduckgo.com/html?q=";
+static GOOGLE_URL: &'static str="https://www.google.com/search?q=";
 
 
 fn get_bang(bang:&str, r:&str) -> String {
@@ -48,7 +58,7 @@ fn get_bang(bang:&str, r:&str) -> String {
     if BANGS.contains_key(bang) {
         url=BANGS.get(bang).unwrap().replace("{}",r);
     }else{
-       return format!("{}!{} {}",DDG_SEARCH,bang,r)
+       return format!("{}!{} {}",DDG_URL,bang,r)
     }
     if r=="" {
         let url=Url::parse(&url).unwrap();
@@ -65,8 +75,8 @@ fn handle_bang(q: String) -> Redirect {
     let b=get_bang(bang,st);
     Redirect::to(b)
 }
-fn handle_query(q: String) -> Template {
-    let html: String = ureq::get(&format!("https://html.duckduckgo.com/html?q={}",q))
+fn handle_ddg_query(q: String) -> Template {
+    let html: String = ureq::get(&format!("{}{}",DDG_HTML_URL,q))
         .call().unwrap()
         .into_string().unwrap();
     let fragment = Html::parse_fragment(&html);
@@ -78,21 +88,26 @@ fn handle_query(q: String) -> Template {
     let results=fragment.select(&web_result).take(20)
         .filter_map(|e| {
             let link = e.select(&link).next();
-            let result_link;
             if link == None{
                 return None;
-            }else{
-                result_link=link.unwrap().inner_html().trim().to_string();
             }
+            let result_link=link.unwrap().inner_html().trim().to_string();
+            let result_link=format!("https://{}", result_link);
+
             let desc = e.select(&desc).next();
-            let result_desc;
             if desc == None{
                 return None;
-            }else{
-                result_desc=desc.unwrap().text().collect::<String>()
             }
+            let result_desc=desc.unwrap().text().collect::<String>();
+
+            let title=e.select(&title).next();
+            if title == None{
+                return None;
+            }
+            let result_title=title.unwrap().inner_html();
+
             return Some(ContextResult{
-                title: e.select(&title).next().unwrap().inner_html(),
+                title: result_title,
                 link: result_link,
                 desc: result_desc
             })
@@ -100,20 +115,73 @@ fn handle_query(q: String) -> Template {
         .collect::<Vec<_>>();
     Template::render("index",&TemplateContext{
         query: q.to_string(),
+        backend: "ddg".to_string(),
         results: results
     })
 }
+fn handle_google_query(q: String) -> Template {
+    let html: String = ureq::get(&format!("{}{}", GOOGLE_URL,q))
+        .set("authority", "www.google.com")
+        .set("user-agent", "user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.15.2 Chrome/87.0.4280.144 Safari/537.36")
+        .call().unwrap()
+        .into_string().unwrap();
+    let fragment = Html::parse_fragment(&html);
+    let web_result = Selector::parse("div.g").unwrap();
+    let title = Selector::parse(".LC20lb.MBeuO.DKV0Md").unwrap();
+    let link = Selector::parse(".yuRUbf a").unwrap();
+    let desc = Selector::parse(".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf span").unwrap();
 
-#[get("/?<q>")]
-fn query(q: String) -> Either<Redirect,Template>{
+    let results=fragment.select(&web_result).take(20)
+        .filter_map(|e| {
+            let link = e.select(&link).next();
+            if link == None{
+                return None;
+            }
+            let result_link=link.unwrap().value().attr("href").unwrap().to_string();
+
+            let desc = e.select(&desc).next();
+            if desc == None{
+                return None;
+            }
+            let result_desc=desc.unwrap().text().collect::<String>();
+
+            let title=e.select(&title).next();
+            if title == None{
+                return None;
+            }
+            let result_title=title.unwrap().inner_html();
+
+            return Some(ContextResult{
+                title: result_title,
+                link: result_link,
+                desc: result_desc
+            })
+        })
+        .collect::<Vec<_>>();
+    Template::render("index",&TemplateContext{
+        query: q.to_string(),
+        backend: "google".to_string(),
+        results: results
+    })
+
+}
+
+#[get("/?<q>&<b>")]
+fn query(q: String, b: Option<String>) -> Either<Redirect,Template>{
     let q=q.replace("+"," ");
     let q=decode(&q).unwrap_or(q.to_string());
-    println!("{}", q);
+    let b=b.unwrap_or(String::from("ddg"));
     if q.starts_with("!") {
         Left(handle_bang(q))
-    }else{
-        Right(handle_query(q))
+    }else if "google" == &*b {
+        Right(handle_google_query(q))
+    } else{
+        Right(handle_ddg_query(q))
     }
+}
+#[get("/favicon.ico")]
+async fn favicon() -> Option<NamedFile> {
+    NamedFile::open("favicon.ico").await.ok()
 }
 
 
@@ -122,9 +190,9 @@ fn not_found() -> String {
     String::from("Kys")
 }
 
-fn main() {
+#[launch]
+fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![query])
+        .mount("/", routes![query,favicon])
         .attach(Template::fairing())
-        .launch();
 }
