@@ -48,7 +48,7 @@ lazy_static! {
         ("google", ["div.g", ".LC20lb.MBeuO.DKV0Md", ".yuRUbf a", ".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf"])
     ].iter().cloned().collect();
 }
-static DDG_URL: &'static str="http://duckduckgo.com/?q=";
+static DDG_URL: &'static str="https://duckduckgo.com/?q=";
 static DDG_HTML_URL: &'static str="https://html.duckduckgo.com/html?q=";
 static GOOGLE_URL: &'static str="https://www.google.com/search?q=";
 
@@ -58,11 +58,11 @@ fn get_bang(bang:&str, r:&str) -> String {
     if BANGS.contains_key(bang) {
         url=BANGS.get(bang).unwrap().replace("{}",r);
     }else{
-       return format!("{}!{} {}",DDG_URL,bang,r)
+        return format!("{}!{}%20{}",DDG_URL,bang,r)
     }
     if r=="" {
         let url=Url::parse(&url).unwrap();
-        format!("{}://{}",url.scheme(), url.host_str().unwrap())
+        return format!("{}://{}",url.scheme(), url.host_str().unwrap())
     }else{
         url
     }
