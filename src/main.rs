@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use either::{Either,Left,Right};
 
 use serde::Serialize;
-use urlencoding::decode;
+use urlencoding::{encode,decode};
 use url::Url;
 
 use rocket_dyn_templates::{Template};
@@ -58,7 +58,7 @@ fn get_bang(bang:&str, r:&str) -> String {
     if BANGS.contains_key(bang) {
         url=BANGS.get(bang).unwrap().replace("{}",r);
     }else{
-        return format!("{}!{}%20{}",DDG_URL,bang,r)
+        return format!("{}!{}%20{}",DDG_URL,bang,encode(&r))
     }
     if r=="" {
         let url=Url::parse(&url).unwrap();
