@@ -10,6 +10,7 @@
     --accent: #7aa2f7;
     --accent2: #9ece6a;
     --accent3: #ad8ee6;
+    --accent4: #f7768e;
   }
   html,body{
     margin:0;
@@ -17,13 +18,9 @@
     color:var(--fg);
     overflow-y:hidden;
   }
-  body{
-    width:50em;
-  }
-  form{
-    margin:1em;
-  }
   input{
+    margin:1em;
+		margin-bottom:0;
     height:2em;
     background:var(--bg-alt);
     color:var(--fg);
@@ -31,12 +28,13 @@
     font-size:16px;
     padding:0.2em;
     padding-left:1em;
-    width:46.8em;
+    width:45em;
   }
   input:focus{
     outline:none;
   }
   .result{
+		max-width:45.3em;
     display:flex;
     flex-direction:column;
     margin:1em;
@@ -61,16 +59,18 @@
   .result__type{
     color:var(--accent3);
   }
-	.backend{
-		display:none;
+	#backend-indicator{
+		text-transform: uppercase;
+		font-weight: bold;
+		color:var(--accent4);
 	}
-
 </style>
 </head>
 <body>
   <form action="/" method="get">
+		<input id="backend" type="hidden" name="b" value="{{backend}}">
 		<input id="search" name="q" value="{{{query}}}">
-		<input id="backend" name="b" value="{{backend}}">
+		<span id="backend-indicator">{{backend}}</span>
 	</form>
   {{#each results}}
   <div class="result">
@@ -135,6 +135,8 @@
 		ws=document.querySelectorAll('.result')
 		wslen=ws.length
 		backend=window.location.search.substring(1).split('&').find(x=>x.startsWith('b')).split('=')[1]
+		document.querySelector('#backend').value=backend
+
 
 		updateActive(0)
 	})
