@@ -45,7 +45,7 @@ lazy_static! {
 
     static ref SELECTORS: HashMap<&'static str,[&'static str; 4]> = [
         ("ddg", [".web-result",".result__title a",".result__url",".result__snippet"]),
-        ("google", ["div.g", ".LC20lb.MBeuO.DKV0Md", ".yuRUbf a", ".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf span"])
+        ("google", ["div.g", ".LC20lb.MBeuO.DKV0Md", ".yuRUbf a", ".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf"])
     ].iter().cloned().collect();
 }
 static DDG_URL: &'static str="http://duckduckgo.com/?q=";
@@ -129,7 +129,7 @@ fn handle_google_query(q: String) -> Template {
     let web_result = Selector::parse("div.g").unwrap();
     let title = Selector::parse(".LC20lb.MBeuO.DKV0Md").unwrap();
     let link = Selector::parse(".yuRUbf a").unwrap();
-    let desc = Selector::parse(".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf span").unwrap();
+    let desc = Selector::parse(".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf").unwrap();
 
     let results=fragment.select(&web_result).take(20)
         .filter_map(|e| {
@@ -173,7 +173,7 @@ fn query(q: String, b: Option<String>) -> Either<Redirect,Template>{
     let b=b.unwrap_or(String::from("ddg"));
     if q.starts_with("!") {
         Left(handle_bang(q))
-    }else if "google" == &*b {
+    }else if b.contains("google") {
         Right(handle_google_query(q))
     } else{
         Right(handle_ddg_query(q))
