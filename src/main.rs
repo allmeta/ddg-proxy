@@ -56,7 +56,7 @@ static GOOGLE_URL: &'static str="https://www.google.com/search?q=";
 fn get_bang(bang:&str, r:&str) -> String {
     let url: String;
     if BANGS.contains_key(bang) {
-        url=BANGS.get(bang).unwrap().replace("{}",r);
+        url=BANGS.get(bang).unwrap().replace("{}",&encode(&r));
     }else{
         return format!("{}!{}%20{}",DDG_URL,bang,encode(&r))
     }
@@ -73,6 +73,7 @@ fn handle_bang(q: String) -> Redirect {
     let bang=s.next().unwrap();
     let st = s.as_str();
     let b=get_bang(bang,st);
+    println!("{}", &b);
     Redirect::to(b)
 }
 fn handle_ddg_query(q: String) -> Template {
