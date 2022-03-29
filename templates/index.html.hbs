@@ -16,11 +16,11 @@
     margin:0;
     background:var(--bg);
     color:var(--fg);
-    overflow-y:hidden;
+    overflow-x:hidden;
   }
   input{
     margin:1em;
-		margin-bottom:0;
+    margin-bottom:0;
     height:2em;
     background:var(--bg-alt);
     color:var(--fg);
@@ -34,7 +34,7 @@
     outline:none;
   }
   .result{
-		max-width:45.3em;
+    max-width:45.3em;
     display:flex;
     flex-direction:column;
     margin:1em;
@@ -59,25 +59,25 @@
   .result__type{
     color:var(--accent3);
   }
-	#backend-indicator{
-		text-transform: uppercase;
-		font-weight: bold;
-		color:var(--accent4);
-	}
+  #backend-indicator{
+    text-transform: uppercase;
+    font-weight: bold;
+    color:var(--accent4);
+  }
 </style>
 </head>
 <body>
   <form action="/" method="get">
-		<input id="backend" type="hidden" name="b" value="{{backend}}">
-		<input id="search" name="q" value="{{{query}}}">
-		<span id="backend-indicator">{{backend}}</span>
-	</form>
+    <input id="backend" type="hidden" name="b" value="{{backend}}">
+    <input id="search" name="q" value="{{query}}">
+    <a href="javascript:void(0)" id="backend-indicator" onclick="changeEngine()">{{backend}}</a>
+  </form>
   {{#each results}}
-  <div class="result">
-    <span class="title">{{{title}}}</span>
-    <a href="{{link}}">{{link}}</a>
-    <span class="desc">{{desc}}</span>
-  </div>
+    <div class="result">
+      <span class="title">{{{title}}}</span>
+      <a href="{{link}}">{{link}}</a>
+      <span class="desc">{{desc}}</span>
+    </div>
   {{/each}}
 </body>
 <script>
