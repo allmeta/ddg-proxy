@@ -33,7 +33,11 @@
   input:focus{
     outline:none;
   }
+  .result:visited{
+    all:unset;
+  }
   .result{
+    all:unset;
     max-width:45.3em;
     display:flex;
     flex-direction:column;
@@ -52,8 +56,8 @@
   .desc{
     font-size:14px;
   }
-  a{
-    text-decoration:none; 
+  .link{
+    text-decoration:none;
     color:var(--accent2);
   }
   .result__type{
@@ -64,6 +68,18 @@
     font-weight: bold;
     color:var(--accent4);
   }
+  #backend-indicator:hover{
+    background:var(--bg-alt);
+  }
+  .active .link {
+    text-decoration:underline;
+  }
+  .active:hover{
+    cursor:pointer;
+  }
+  a{
+    color:unset;
+  }
 </style>
 </head>
 <body>
@@ -73,11 +89,11 @@
     <a href="javascript:void(0)" id="backend-indicator" onclick="changeEngine()">{{backend}}</a>
   </form>
   {{#each results}}
-    <div class="result">
+    <a href="{{link}}" class="result" onmouseenter="updateActive({{@index}},true)">
       <span class="title">{{{title}}}</span>
-      <a href="{{link}}">{{link}}</a>
+      <span class="link">{{link}}</span>
       <span class="desc">{{desc}}</span>
-    </div>
+    </a>
   {{/each}}
 </body>
 <script>
@@ -86,20 +102,19 @@
   let wslen;
   let backend;
 
-  function updateActive(a){
+  function updateActive(a,mouse){
     if(a<0 || a>=wslen) return 
     let c=ws[active].className.split(' ')[0]
     ws[active].className=c
 
     active=a
     ws[a].className+=' active'
-    let l=ws[a].querySelector('a')
-    //l.focus()
-    l.scrollIntoView({block:'center'})
+    let l=ws[a]
+    if(!mouse) l.scrollIntoView({block:'center'})
   }
 
   function followLink(newtab){
-    let a=document.querySelectorAll('.result a')[active].href
+    let a=document.querySelectorAll('.result')[active].href
     newtab ? window.open(a,'_blank') : window.location=a
   }
 
