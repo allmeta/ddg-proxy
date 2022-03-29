@@ -82,7 +82,7 @@ jobs:
     - name: Archive
       run: |
         mv ${{ matrix.binary_path }}/${{ matrix.file }} .
-        tar caf ddg-proxy-${{matrix.os}}.tar.gz templates ${{ matrix.file }}
+        tar caf ddg-proxy-${{matrix.os}}.tar.gz templates bangs ${{ matrix.file }}
     - name: Upload release assets
       uses: actions/upload-release-asset@v1
       env:
