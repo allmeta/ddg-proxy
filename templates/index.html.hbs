@@ -81,64 +81,63 @@
   {{/each}}
 </body>
 <script>
-	let active=0;
-	let ws;
-	let wslen;
-	let backend;
+  let active=0;
+  let ws;
+  let wslen;
+  let backend;
 
-	function updateActive(a){
-		if(a<0 || a>=wslen) return 
-		let c=ws[active].className.split(' ')[0]
-		ws[active].className=c
+  function updateActive(a){
+    if(a<0 || a>=wslen) return 
+    let c=ws[active].className.split(' ')[0]
+    ws[active].className=c
 
-		active=a
-		ws[a].className+=' active'
-		let l=ws[a].querySelector('a')
-		//l.focus()
-		l.scrollIntoView({block:'center'})
-	}
+    active=a
+    ws[a].className+=' active'
+    let l=ws[a].querySelector('a')
+    //l.focus()
+    l.scrollIntoView({block:'center'})
+  }
 
-	function followLink(newtab){
-		let a=document.querySelectorAll('.result a')[active].href
-		newtab ? window.open(a,'_blank') : window.location=a
-	}
+  function followLink(newtab){
+    let a=document.querySelectorAll('.result a')[active].href
+    newtab ? window.open(a,'_blank') : window.location=a
+  }
 
-	function changeEngine(){
-			backend=backend=="google"?"ddg":"google";
-			document.querySelector("#backend").value=backend
-			document.querySelector("form").submit()
-	}
+  function changeEngine(){
+    backend=backend=="google"?"ddg":"google";
+    document.querySelector("#backend").value=backend
+    document.querySelector("form").submit()
+  }
 
-	function keyHandler(e){
-		switch (e.key){
-			case 'j':
-			case 'ArrowDown': updateActive(active+1);break;
-			case 'k':
-			case 'ArrowUp': updateActive(active-1);break;
-			case 'ArrowRight':
-			case 'l':
-			case 'Enter': followLink(e.ctrlKey);break;
-			case 'h':
-			case 'ArrowLeft': changeEngine();break;
-		}
-	}
+  function keyHandler(e){
+    switch (e.key){
+      case 'j':
+      case 'ArrowDown': updateActive(active+1);break;
+      case 'k':
+      case 'ArrowUp': updateActive(active-1);break;
+      case 'ArrowRight':
+      case 'l':
+      case 'Enter': followLink(e.ctrlKey);break;
+      case 'h':
+      case 'ArrowLeft': changeEngine();break;
+    }
+  }
 
-	document.addEventListener('DOMContentLoaded',()=>{
-		document.getElementById('search').addEventListener('keydown',e=>{
-			e.stopPropagation()
-		})
-		document.getElementById('search').addEventListener('input',e=>{
-			e.stopPropagation()
-		})
-		window.addEventListener('keydown',keyHandler)
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('search').addEventListener('keydown',e=>{
+      e.stopPropagation()
+    })
+    document.getElementById('search').addEventListener('input',e=>{
+      e.stopPropagation()
+    })
+    window.addEventListener('keydown',keyHandler)
 
-		ws=document.querySelectorAll('.result')
-		wslen=ws.length
-		backend=window.location.search.substring(1).split('&').find(x=>x.startsWith('b')).split('=')[1]
-		document.querySelector('#backend').value=backend
+    ws=document.querySelectorAll('.result')
+    wslen=ws.length
+    backend=window.location.search.substring(1).split('&').find(x=>x.startsWith('b')).split('=')[1]
+    document.querySelector('#backend').value=backend
 
-
-		updateActive(0)
-	})
+    updateActive(0)
+  })
 </script>
 </html>
