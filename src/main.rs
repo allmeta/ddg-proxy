@@ -1,11 +1,13 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 #![feature(str_split_as_str)]
 #![feature(option_result_contains)]
+#![feature(once_cell)]
 
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate rocket;
 
 use std::collections::HashMap;
+use std::fs;
 use either::{Either,Left,Right};
 
 use serde::Serialize;
@@ -31,17 +33,20 @@ struct ContextResult {
     desc: String
 }
 lazy_static! {
-    static ref BANGS: HashMap<&'static str,&'static str> = [
-        ("tr", "https://translate.google.com/#auto/en/{}"),
-        ("r", "https://www.reddit.com/search?q={}"),
-        ("rio","https://raider.io/search?type=character&name[0][contains]={}"),
-        ("yt" ,"https://www.youtube.com/results?search_query={}"),
-        ("gh" ,"https://github.com/search?q={}"),
-        ("tw" ,"https://twitter.com/search?q={}"),
-        ("m" ,"https://www.google.no/maps?q={}"),
-        ("imdb","https://www.imdb.com/find?s=all&q={}"),
-        ("ig","https://www.instagram.com/{}")
-    ].iter().cloned().collect();
+    static ref BANGS: HashMap<String, String> = 
+        fs::read_to_string("/home/meta/git/ddg-proxy/bangs")
+        .expect("Could not find bangs file")
+        .split("\n")
+        .filter_map(|x|{
+            if x=="" {
+                return None;
+            }
+            let mut x=x.split(" ");
+            let a=x.nth(0).unwrap().to_string();
+            let b=x.nth(0).unwrap().to_string();
+            return Some((a,b));
+        })
+        .collect();
 
     static ref SELECTORS: HashMap<&'static str,[&'static str; 4]> = [
         ("ddg", [".web-result",".result__title a",".result__url",".result__snippet"]),
@@ -73,7 +78,6 @@ fn handle_bang(q: String) -> Redirect {
     let bang=s.next().unwrap();
     let st = s.as_str();
     let b=get_bang(bang,st);
-    println!("{}", &b);
     Redirect::to(b)
 }
 fn handle_ddg_query(q: String) -> Template {
@@ -183,12 +187,6 @@ fn query(q: String, b: Option<String>) -> Either<Redirect,Template>{
 #[get("/favicon.ico")]
 async fn favicon() -> Option<NamedFile> {
     NamedFile::open("favicon.ico").await.ok()
-}
-
-
-#[catch(404)]
-fn not_found() -> String {
-    String::from("Kys")
 }
 
 #[launch]

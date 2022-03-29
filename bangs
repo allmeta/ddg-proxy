@@ -1,0 +1,10 @@
+tr https://translate.google.com/#auto/en/{}
+r https://www.reddit.com/search?q={}
+rio https://raider.io/search?type=character&name[0][contains]={}
+yt https://www.youtube.com/results?search_query={}
+gh https://github.com/search?q={}
+tw https://twitter.com/search?q={}
+m https://www.google.no/maps?q={}
+imdb https://www.imdb.com/find?s=all&q={}
+ig https://www.instagram.com/{}
+sc https://soundcloud.com/search?q={}
