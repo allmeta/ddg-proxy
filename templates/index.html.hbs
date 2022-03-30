@@ -100,7 +100,7 @@
     <input id="search" name="q" value="{{query}}">
   </form>
   {{#each results}}
-    <a href="{{link}}" class="result" onmouseenter="updateActive({{@index}},true)">
+    <a href="{{link}}" class="result" onmousemove="updateActive({{@index}},true)">
       <span class="title">{{{title}}}</span>
       <span class="link">{{link}}</span>
       <span class="desc">{{desc}}</span>
@@ -117,7 +117,7 @@
   let backend;
 
   function updateActive(a,mouse){
-    if(a<0 || a>=wslen) return 
+    if(a<0 || a>=wslen || a==active) return 
     let c=ws[active].className.split(' ')[0]
     ws[active].className=c
 
