@@ -18,17 +18,23 @@
     color:var(--fg);
     overflow-x:hidden;
   }
+  body{
+    display:flex;
+    flex-direction:column;
+    margin: 0 1em;
+    max-width:50em;
+  }
+  body > * {
+    margin: 1em 0 0;
+  }
   input{
-    margin:1em;
-    margin-bottom:0;
-    height:2em;
     background:var(--bg-alt);
     color:var(--fg);
     border:none;
     font-size:16px;
-    padding:0.2em;
-    padding-left:1em;
-    width:45em;
+    padding:0.2em 1em;
+    height:2em;
+    width:100%;
   }
   input:focus{
     outline:none;
@@ -38,13 +44,12 @@
   }
   .result{
     all:unset;
-    max-width:45.3em;
     display:flex;
     flex-direction:column;
-    margin:1em;
+    margin-top:1em;
     padding:0.3em;
     border-left:0.3em solid var(--bg-alt);
-    font-family:'FiraCode Nerd Font';
+    font-family:'FiraCode Nerd Font', monospace;
   }
   .active{
     border-left-color:var(--accent);
@@ -80,13 +85,19 @@
   a{
     color:unset;
   }
+  footer{
+    margin-top:1em;
+    text-align:center;
+  }
+  #backend{
+    display:none;
+  }
 </style>
 </head>
 <body>
   <form action="/" method="get">
     <input id="backend" type="hidden" name="b" value="{{backend}}">
     <input id="search" name="q" value="{{query}}">
-    <a href="javascript:void(0)" id="backend-indicator" onclick="changeEngine()">{{backend}}</a>
   </form>
   {{#each results}}
     <a href="{{link}}" class="result" onmouseenter="updateActive({{@index}},true)">
@@ -95,6 +106,9 @@
       <span class="desc">{{desc}}</span>
     </a>
   {{/each}}
+  <footer>
+    <a href="javascript:void(0)" id="backend-indicator" onclick="changeEngine()">{{backend}}</a>
+  </footer>
 </body>
 <script>
   let active=0;
