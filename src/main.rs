@@ -8,6 +8,8 @@
 
 use std::collections::HashMap;
 use std::fs;
+use std::env;
+use std::sync::Mutex;
 use either::{Either,Left,Right};
 
 use serde::Serialize;
@@ -33,20 +35,19 @@ struct ContextResult {
     desc: String
 }
 lazy_static! {
-    static ref BANGS: HashMap<String, String> = 
-        fs::read_to_string("/home/meta/git/ddg-proxy/bangs")
-        .expect("Could not find bangs file")
-        .split("\n")
-        .filter_map(|x|{
-            if x=="" {
-                return None;
-            }
-            let mut x=x.split(" ");
-            let a=x.nth(0).unwrap().to_string();
-            let b=x.nth(0).unwrap().to_string();
-            return Some((a,b));
-        })
-        .collect();
+    static ref BANGS: Mutex<HashMap<String, String>> = {
+        let m = fs::read_to_string(env::var("DP_BANGS").unwrap())
+            .expect("Could not find bangs file")
+            .split("\n")
+            .filter_map(|x|{ 
+                if x=="" { return None; } 
+                let mut x=x.split(" "); 
+                let a=x.nth(0).unwrap().to_string(); 
+                let b=x.nth(0).unwrap().to_string(); 
+                return Some((a,b)); }) 
+            .collect(); 
+        Mutex::new(m) 
+    };
 
     static ref SELECTORS: HashMap<&'static str,[&'static str; 4]> = [
         ("ddg", [".web-result",".result__title a",".result__url",".result__snippet"]),
@@ -58,10 +59,31 @@ static DDG_HTML_URL: &'static str="https://html.duckduckgo.com/html?q=";
 static GOOGLE_URL: &'static str="https://www.google.com/search?q=";
 
 
+fn refresh_bangs() {
+    let mut map = BANGS.lock().unwrap();
+    let m : HashMap<String,String> = 
+        fs::read_to_string(env::var("DP_BANGS").unwrap())
+        .expect("Could not find bangs file")
+        .split("\n")
+        .filter_map(|x|{
+            if x=="" {
+                return None;
+            }
+            let mut x=x.split(" ");
+            let a=x.next().unwrap().to_string();
+            let b=x.next().unwrap().to_string();
+            return Some((a,b));
+        })
+        .collect();
+    map.extend(m)
+}
+
+
 fn get_bang(bang:&str, r:&str) -> String {
     let url: String;
-    if BANGS.contains_key(bang) {
-        url=BANGS.get(bang).unwrap().replace("{}",&encode(&r));
+    let map = BANGS.lock().unwrap();
+    if map.contains_key(bang) {
+        url=map.get(bang).unwrap().replace("{}",&encode(&r));
     }else{
         return format!("{}!{}%20{}",DDG_URL,bang,encode(&r))
     }
@@ -188,10 +210,19 @@ fn query(q: String, b: Option<String>) -> Either<Redirect,Template>{
 async fn favicon() -> Option<NamedFile> {
     NamedFile::open("favicon.ico").await.ok()
 }
+#[post("/refresh")]
+async fn refresh() -> String{
+    refresh_bangs();
+    return String::from("Success!")
+}
 
 #[launch]
 fn rocket() -> _ {
+    match env::var("DP_BANGS"){
+        Ok(val) => println!("DP_BANGS: {}", val),
+        Err(e) => panic!("DP_BANGS not set. Should point to the bangs file.: {}",e)
+    };
     rocket::build()
-        .mount("/", routes![query,favicon])
+        .mount("/", routes![query,favicon,refresh])
         .attach(Template::fairing())
 }
