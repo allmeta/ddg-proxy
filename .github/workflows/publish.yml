@@ -35,7 +35,7 @@ jobs:
     needs: create_release # need upload_url
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-2022, ubuntu-20.04, macos-11]
         include:
         - os: ubuntu-latest
           file: ddg-proxy
