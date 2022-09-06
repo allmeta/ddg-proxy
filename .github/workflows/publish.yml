@@ -1,7 +1,6 @@
 name: Publish
 
 on:
-  # Trigger the workflow on the new 'v*' tag created
   push:
     tags:
       - "v*"
@@ -13,8 +12,7 @@ env:
 jobs:
   create_release:
     name: Create release
-    runs-on: ubuntu-latest
-    # Note this. We are going to use that in further jobs.
+    runs-on: ubuntu-20.04
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
@@ -32,20 +30,20 @@ jobs:
   build_and_publish:
     name: Build and publish binaries for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: create_release # need upload_url
+    needs: create_release
     strategy:
       matrix:
         os: [windows-2022, ubuntu-20.04, macos-11]
         include:
-        - os: ubuntu-latest
+        - os: ubuntu-20.04
           file: ddg-proxy
           args: --best --lzma
           strip: true
-        - os: windows-latest
+        - os: windows-2022
           file: ddg-proxy.exe
           args: -9
           strip: false
-        - os: macos-latest
+        - os: macos-11
           file: ddg-proxy
           args: --best
           strip: true
@@ -53,8 +51,9 @@ jobs:
         binary_path: [target/release]
     steps:
     - uses: actions/checkout@master
+    
     - name: Cache cargo
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           ~/.cargo/bin/
