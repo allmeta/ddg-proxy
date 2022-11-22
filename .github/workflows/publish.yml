@@ -52,6 +52,11 @@ jobs:
     steps:
     - uses: actions/checkout@master
     
+    - name: Setup rust toolchain
+      uses: hecrj/setup-rust-action@v1
+      with:
+        rust-version: ${{ matrix.rust }}
+    
     - name: Cache cargo
       uses: actions/cache@v3
       with:
@@ -62,12 +67,11 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Setup rust toolchain
-      uses: hecrj/setup-rust-action@v1
-      with:
-        rust-version: ${{ matrix.rust }}
-        
+        restore-keys: |
+          ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          ${{ matrix.os }}-cargo-
+          ${{ matrix.os }}-
+          
     - name: Build
       run: cargo build --release
       
