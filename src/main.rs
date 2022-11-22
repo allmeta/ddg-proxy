@@ -154,9 +154,9 @@ fn handle_google_query(q: String) -> Template {
         .into_string().unwrap();
     let fragment = Html::parse_fragment(&html);
     let web_result = Selector::parse("div.g").unwrap();
-    let title = Selector::parse(".LC20lb.MBeuO.DKV0Md").unwrap();
+    let title = Selector::parse(".LC20lb").unwrap();
     let link = Selector::parse(".yuRUbf a").unwrap();
-    let desc = Selector::parse(".VwiC3b.yXK7lf.MUxGbd.yDYNvb.lyLwlc.lEBKkf").unwrap();
+    let desc = Selector::parse(".VwiC3b").unwrap();
 
     let results=fragment.select(&web_result).take(20)
         .filter_map(|e| {
