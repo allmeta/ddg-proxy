@@ -2,8 +2,7 @@ name: Publish
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: main
 
 env:
   CARGO_TERM_COLOR: always
@@ -11,6 +10,7 @@ env:
 
 jobs:
   create_release:
+    if: "startsWith($(git tag --points-at HEAD), 'v')"
     name: Create release
     runs-on: ubuntu-20.04
     outputs:
@@ -51,6 +51,7 @@ jobs:
         binary_path: [target/release]
     steps:
     - uses: actions/checkout@master
+      fetch-depth: 0
     
     - name: Setup rust toolchain
       uses: hecrj/setup-rust-action@v1
