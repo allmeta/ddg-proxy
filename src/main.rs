@@ -78,7 +78,6 @@ fn refresh_bangs() {
     map.extend(m)
 }
 
-
 fn get_bang(bang:&str, r:&str) -> String {
     let url: String;
     let map = BANGS.lock().unwrap();
@@ -94,14 +93,15 @@ fn get_bang(bang:&str, r:&str) -> String {
         url
     }
 }
+
 fn handle_bang(q: String) -> Redirect {
-    let _q=&q[1..];
-    let s=&mut _q.split(" ");
-    let bang=s.next().unwrap();
-    let st = s.as_str();
-    let b=get_bang(bang,st);
+    let (bang, rest): (Vec<&str>,Vec<&str>) = q.split(" ").partition(|n| n.starts_with("!"));
+    let bang=&bang.get(0).unwrap()[1..];
+    let rest=&rest.join(" ");
+    let b=get_bang(&bang,rest);
     Redirect::to(b)
 }
+
 fn handle_ddg_query(q: String) -> Template {
     let html: String = ureq::get(&format!("{}{}",DDG_HTML_URL,q))
         .call().unwrap()
@@ -198,7 +198,7 @@ fn query(q: String, b: Option<String>) -> Either<Redirect,Template>{
     let q=q.replace("+"," ");
     let q=decode(&q).unwrap_or(q.to_string());
     let b=b.unwrap_or(String::from("ddg"));
-    if q.starts_with("!") {
+    if q.contains("!") {
         Left(handle_bang(q))
     }else if b.contains("google") {
         Right(handle_google_query(q))
