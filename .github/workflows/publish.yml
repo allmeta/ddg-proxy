@@ -47,7 +47,7 @@ jobs:
           file: ddg-proxy
           args: --best
           strip: true
-        rust: [nightly]
+        rust: [1.61.0-nightly]
         binary_path: [target/release]
     steps:
     - uses: actions/checkout@master
@@ -64,7 +64,7 @@ jobs:
         key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         
     - name: Setup rust toolchain
-      uses: hecrj/setup-rust-action@v1
+      uses: hecrj/setup-rust-action@v1.4.1
       with:
         rust-version: ${{ matrix.rust }}
         
